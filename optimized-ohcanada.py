@@ -13,7 +13,7 @@ import jsonpickle
 
 
 # empty dict
-empty_dict = {'AMETHYSTS' : 0, 'STARFRUIT' : 0}
+empty_dict = {'AMETHYSTS': 0, 'STARFRUIT': 0} 
 
 def def_value():
     return copy.deepcopy(empty_dict)
@@ -23,7 +23,7 @@ class Trader:
     position = copy.deepcopy(empty_dict)
     
     # limit
-    POSITION_LIMIT = {'AMETHYSTS' : 20, 'STARFRUIT' : 20}
+    POSITION_LIMIT = {'AMETHYSTS': 20, 'STARFRUIT': 20}
     
     # for STARFRUIT regression
     starfruit_cache = []
@@ -54,6 +54,7 @@ class Trader:
         
         # get current position
         current_position = self.position[product]
+        print('Current Position FOR BUY AME:', current_position)
         
         # ============================ ***for placing buy order*** ============================
         
@@ -75,6 +76,8 @@ class Trader:
                 # add to position
                 current_position += buy_volume
                 
+                print(f"Placed BUY order: Volume = {buy_volume}, Price = {ask}, Current Position = {current_position}")
+                
         # if we are currently short, we need to buy to cover
         if (current_position < self.POSITION_LIMIT[product]) and (self.position[product] < 0):
             # buy to our limit, max amount we can buy is 10
@@ -88,6 +91,9 @@ class Trader:
             
             # add to position
             current_position += buy_volume
+            
+            print(f"Placed BUY order to cover short: Volume = {buy_volume}, Price = {price}, Current Position = {current_position}")
+
             
         # if we are currently long (more than 10 shares), we want to buy more lol
         if (current_position < self.POSITION_LIMIT[product]) and (self.position[product] > 10):
@@ -103,6 +109,8 @@ class Trader:
             # add to position
             current_position += buy_volume
             
+            print(f"Placed BUY order to buy more: Volume = {buy_volume}, Price = {price}, Current Position = {current_position}")
+            
         # let place the rest at the acc_ask, buy to our limit
         if (current_position < self.POSITION_LIMIT[product]):
             buy_volume = min(self.POSITION_LIMIT[product] - current_position, 10)
@@ -112,9 +120,12 @@ class Trader:
             # add to current position
             current_position += buy_volume
             
+            print(f"Placed BUY order to buy the rest: Volume = {buy_volume}, Price = {price}, Current Position = {current_position}")
+            
         
         # ============================ ***for placing sell order*** ============================
         current_position = self.position[product]
+        print('Current Position SELL FOR AMETHEYST:', current_position)
         for bid, vol in buy_dict:
             # if the bid price is greater than the acc_ask price
             # and price == our acc_ask and we are long the product
@@ -131,6 +142,8 @@ class Trader:
                 # add to position
                 current_position += sell_volume
                 
+                print(f"Placed SELL order: Volume = {sell_volume}, Price = {bid}")
+                
         # if we are currently long, we need to sell to cover
         if (current_position > -self.POSITION_LIMIT[product]) and (self.position[product] > 0):
             sell_volume = max(-self.POSITION_LIMIT[product] - current_position, -10)
@@ -141,6 +154,8 @@ class Trader:
             # add to position
             current_position += sell_volume
             
+            print(f"Placed SELL order for {product} to cover long: Volume = {sell_volume}, Price = {price}, Current Position = {current_position}")
+            
         # if we are currently short, we want to sell more lol
         if (current_position > -self.POSITION_LIMIT[product]) and (self.position[product] < -10):
             sell_volume = max(-self.POSITION_LIMIT[product] - current_position, -10)
@@ -149,6 +164,8 @@ class Trader:
             
             # add to position
             current_position += sell_volume
+            
+            print(f"Placed SELL order for {product} to sell more: Volume = {sell_volume}, Price = {price}, Current Position = {current_position}")
             
             
         # let place the rest at the acc_bid, sell to our limit
@@ -159,6 +176,8 @@ class Trader:
             
             # add to current position
             current_position += sell_volume
+            
+            print(f"Placed SELL order for {product} to sell the rest: Volume = {sell_volume}, Price = {price}, Current Position = {current_position}")
             
         return orders
     
@@ -172,6 +191,7 @@ class Trader:
         
         # get current position
         current_position = self.position[product]
+        print('Current Position FOR BUY STARFRUIT:', current_position)
         
         # ============================ ***for placing buy order*** ============================
         
@@ -193,18 +213,23 @@ class Trader:
                 # add to position
                 current_position += buy_volume
                 
+                print(f"Placed BUY order for {product}: Volume = {buy_volume}, Price = {ask}")
+                
         # if we still have space to buy, we will buy at the acc_ask + 1
         if (current_position < self.POSITION_LIMIT[product]):
-            buy_volume = min(self.POSITION_LIMIT[product] - current_position, 10)
+            buy_volume = self.POSITION_LIMIT[product] - current_position
             price = acc_ask + 1
             orders.append(Order(product, int(price), buy_volume))
             
             # add to current position
             current_position += buy_volume
             
+            print(f"Placed BUY order for {product} to buy the rest: Volume = {buy_volume}, Price = {price}, Current Position = {current_position}")
+            
             
         # ============================ ***for placing sell order*** ============================
         current_position = self.position[product]
+        print('Current Position for Sell STARTFRUIT:', current_position)
         # Sell all orders on the market
         for bid, vol in buy_dict:
             # if the bid price is greater than the acc_ask price
@@ -222,6 +247,8 @@ class Trader:
                 # add to position
                 current_position += sell_volume
                 
+                print(f"Placed SELL order for {product}: Volume = {sell_volume}, Price = {bid}, Current Position = {current_position}")
+                
         # if we still have space to sell, we will sell at the acc_bid - 1
         if (current_position > -self.POSITION_LIMIT[product]):
             sell_volume = -self.POSITION_LIMIT[product] - current_position
@@ -230,6 +257,8 @@ class Trader:
             
             # add to current position
             current_position += sell_volume
+            
+            print(f"Placed SELL order for {product} to sell the rest: Volume = {sell_volume}, Price = {price}, Current Position = {current_position}")
         
         return orders
     
@@ -239,9 +268,16 @@ class Trader:
         result = {'AMETHYSTS' : [], 'STARFRUIT' : []}
 
         # updating the position
-        for key, val in state.position.items():
-            self.position[key] = val
-            
+        print("This is the position from State", state.position)
+        for product, pos in state.position.items():
+            self.position[product] = pos
+
+        print()
+        
+        for key, val in self.position.items():
+            print(f'{key} hey, real position: {val}')
+
+        
         # for the regression
         # Sorting buy orders in descending order to get the highest bid
         sorted_buy = sorted(state.order_depths['STARFRUIT'].buy_orders.items(), key=lambda x: x[0], reverse=True)
